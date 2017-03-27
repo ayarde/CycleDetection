@@ -13,36 +13,11 @@ var allowMethods = function(req, res, next){
   res.header("Access-Control-Allows-Methods", "GET, POST, PUT, DELETE");
 }
 
-function brentAlgorithm(list){
-  var tortoise = hare = list[0];
-  var step_taken = 0;
-  var step_limit = 2;
-
-  for (let i = 0; i < list.length; i++) {
-    if(hare = list[list.length - 1]){
-      console.log("Not found loop");
-    }
-
-    hare = list[i+1];
-    step_taken++;
-
-    if(hare == tortoise){
-      console.log("Loop found");
-      console.log("Hare: " + hare + " Tortoise: " + tortoise);
-    }
-
-    if(step_taken == step_limit){
-      step_taken = 0;
-      step_limit *=2;
-      tortoise = hare;
-    }
-  }
-}
 function f(p){
   return fx0[p];
 }
 
-function algorithmBrent(x0){
+function brentAlgorithm(x0){
 
   var power = lam = 1;
   var tortoise = x0;
@@ -69,7 +44,8 @@ function algorithmBrent(x0){
     hare = f(hare);
     mu++;
   }
-
+  console.log("Lam: "+lam);
+  console.log("Mu: "+mu);
   return [lam,mu];
 }
 
@@ -77,41 +53,41 @@ function getSecuencies (filePath){
   //'resources/files/secuencies/secuencies.txt'
   var secuencies = [];
   var fs = require('fs');
-  var file = fs.readFileSync(filePath, "utf8");
-
-  console.log("This is secuencies.txt \n"+file);
-  fileSecuencies = file.toString().split('\n');
+  var file = "";
+  var fileSecuencies = "";
+  if (fs.existsSync(filePath)) {
+    var file = fs.readFileSync(filePath, "utf8");
+    console.log("This is secuencies.txt \n"+file);
+    fileSecuencies = file.toString().split('\n');
+  }
 
   return fileSecuencies;
 }
 
 function  getCycleToSecuency(filePath){
   var fileSecuencies = [];
+  var cycles = [];
+  var temp = [];
   fileSecuencies = getSecuencies(filePath);
   for (var i = 0; i < fileSecuencies.length-1; i++) {
     console.log('Secuencies'+ fileSecuencies[i]);
+    temp = fileSecuencies[i].split(' ').map(Number);
+    fx0 = temp;
+    cycles [i] = brentAlgorithm(temp[0]);
   }
-
+  return cycles;
 }
 
-function fx0Function(){
-  myArray = [2,0,6,3,1,6,3,1,6,3,1];
-
-  var fx0Values = [];
-  for (let i = 0; i < myArray.length; i++) {
-    fx0Values[myArray[i]]= myArray[i+1];
-  }
-  console.log(fx0Values);
-}
 app.get('/cycleDetection/:path(*\*)',function(req, res, next){
   filePath = req.param('path');
-  res.send(filePath);
-  getCycleToSecuency(filePath);
-  //fx0 = [6,6,0,1,4,3,3,4,2];
-  fx0 = [2,0,6,3,1,6,3,1,6,3,1];
-  var result = algorithmBrent(2);
-  brentAlgorithm(fx0);
-  console.log(result);
+  result = getCycleToSecuency(filePath);
+
+  if (result.length == 0) {
+    res.send("File not found");
+  } else {
+    res.send(result);
+  }
+
 });
 
 app.listen(8080, function(){
