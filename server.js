@@ -1,10 +1,6 @@
 var express = require("express");
-
 var app = express();
-
 var _ = require('underscore');
-
-var fx0= [];
 
 var lam = 0;
 var mu = 0;
@@ -13,43 +9,75 @@ var allowMethods = function(req, res, next){
   res.header("Access-Control-Allows-Methods", "GET, POST, PUT, DELETE");
 }
 
-function f(p){
-  return fx0[p];
-}
+function floydAlgorithm(secuencies,x0) {
+  var i = 0;
+  var j = 0;
+  var mu = 0;
+  var lam = 1;
 
-function brentAlgorithm(x0){
-
-  var power = lam = 1;
-  var tortoise = x0;
-  var hare = f(x0);
-
-  while (tortoise != hare){
-    if(power == lam){
-      tortoise = hare;
-      power *= 2;
-      lam = 0;
-    }
-    hare = f(hare);
-    lam++;
-  }
-
-  mu = 0;
-  tortoise = hare = x0;
-  _.range(lam).forEach(elem => {
-    hare = f(hare);
-  });
+  var tortoise = secuencies[i];
+  var hare = secuencies[x0];
 
   while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(hare);
-    mu++;
+    if (i < secuencies.length){
+      i += 1;
+    }
+
+    if(j < secuencies.length && ((secuencies.length-j)>2)) {
+      j += 2;
+    }
+
+    tortoise = secuencies[i];
+    hare = secuencies [j];
   }
-  console.log("Lam: "+lam);
-  console.log("Mu: "+mu);
-  return [lam,mu];
+
+  i = 0;
+  tortoise = secuencies[i];
+
+  while (tortoise != hare) {
+    if (i < secuencies.length){
+      i += 1;
+    }
+
+    if(j < secuencies.length - 1) {
+      j += 1;
+    }
+
+    tortoise = secuencies[i];
+    hare = secuencies[j];
+    mu += 1;
+  }
+
+  j=i+1
+  hare = secuencies[j];
+  while (tortoise != hare) {
+    if (j < secuencies.length) {
+      j += 1;
+    }
+      hare = secuencies[j];
+      lam += 1;
+  }
+  return buildCycle(secuencies,lam,mu);
 }
 
-function getSecuencies (filePath){
+function buildCycle(secuencies,lam,mu){
+  var cycle ='';
+  var cycleLength = mu + lam;
+  if(lam < mu){
+    cycle = cycle + secuencies[mu].toString();
+  }else{
+    for (var i=mu; i < cycleLength; i++){
+      if(cycle.length == 1){
+        cycle = cycle + secuencies[i].toString();
+      } else {
+        cycle = cycle + ' ' + secuencies[i].toString();
+      }
+    }
+  }
+  return cycle;
+}
+
+function getSecuenciesFromFile (filePath){
   //'resources/files/secuencies/secuencies.txt'
   var secuencies = [];
   var fs = require('fs');
@@ -57,7 +85,6 @@ function getSecuencies (filePath){
   var fileSecuencies = "";
   if (fs.existsSync(filePath)) {
     var file = fs.readFileSync(filePath, "utf8");
-    console.log("This is secuencies.txt \n"+file);
     fileSecuencies = file.toString().split('\n');
   }
 
@@ -67,15 +94,17 @@ function getSecuencies (filePath){
 function  getCycleToSecuency(filePath){
   var fileSecuencies = [];
   var cycles = [];
-  var temp = [];
-  fileSecuencies = getSecuencies(filePath);
+
+  fileSecuencies = getSecuenciesFromFile(filePath);
   for (var i = 0; i < fileSecuencies.length-1; i++) {
-    console.log('Secuencies'+ fileSecuencies[i]);
     temp = fileSecuencies[i].split(' ').map(Number);
-    fx0 = temp;
-    cycles [i] = brentAlgorithm(temp[0]);
+    cycles [i] = floydAlgorithm(temp,temp[0]);
   }
-  return cycles;
+  var text = ''
+  for (let i = 0; i < cycles.length; i++) {
+    text +=  cycles[i] + '<br>';
+  }
+  return text;
 }
 
 app.get('/cycleDetection/:path(*\*)',function(req, res, next){
