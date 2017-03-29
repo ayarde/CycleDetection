@@ -1,6 +1,5 @@
 var express = require("express");
 var app = express();
-var _ = require('underscore');
 
 var lam = 0;
 var mu = 0;
@@ -83,7 +82,7 @@ function getSecuenciesFromFile (filePath){
   var fs = require('fs');
   var file = "";
   var fileSecuencies = "";
-  if (fs.existsSync(filePath)) {
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     var file = fs.readFileSync(filePath, "utf8");
     fileSecuencies = file.toString().split('\n');
   }
